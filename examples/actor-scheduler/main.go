@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-actor/actor"
+	"github.com/geniuscirno/go-actor/actor"
 	"time"
 )
 

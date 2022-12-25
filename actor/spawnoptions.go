@@ -1,6 +1,6 @@
 package actor
 
-import "go-actor/core"
+import "github.com/geniuscirno/go-actor/core"
 
 type SpawnOption func(opts *core.SpawnOptions)
 

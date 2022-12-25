@@ -63,7 +63,7 @@ func (n *node) newProcess(parent *process, behavior ProcessBehavior, opts *Spawn
 
 		behavior: behavior,
 
-		mailbox: make(chan Message, 100),
+		mailbox: make(chan Message, 10000),
 		exit:    make(chan struct{}, 1),
 
 		parent: parent,

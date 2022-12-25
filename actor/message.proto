@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package actor;
-option go_package = "go-actor/actor";
+option go_package = "github.com/geniuscirno/go-actor/actor";
 
 message Started {}
 

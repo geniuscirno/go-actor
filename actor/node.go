@@ -1,8 +1,8 @@
 package actor
 
 import (
-	"go-actor/actor/future"
-	"go-actor/core"
+	"github.com/geniuscirno/go-actor/actor/future"
+	"github.com/geniuscirno/go-actor/core"
 )
 
 type Node struct {

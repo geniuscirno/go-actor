@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go-actor/core"
+	"github.com/geniuscirno/go-actor/core"
 	"google.golang.org/grpc"
 	"net"
 )
@@ -49,7 +49,7 @@ func (s *Server) OnMessage(ctx context.Context, in *OnMessageRequest) (*OnMessag
 		return nil, err
 	}
 
-	if err := s.node.SendMessage(to, core.Message{
+	if err := s.node.SendMessage(ctx, to, core.Message{
 		From:      core.PID{Node: in.Message.From.Node, ID: in.Message.From.Id},
 		RequestID: in.Message.RequestId,
 		Data:      data,

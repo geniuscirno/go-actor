@@ -1,7 +1,7 @@
 package actor
 
 import (
-	"go-actor/core"
+	"github.com/geniuscirno/go-actor/core"
 )
 
 type Context interface {

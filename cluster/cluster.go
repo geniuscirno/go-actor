@@ -3,9 +3,9 @@ package cluster
 import (
 	"context"
 	"errors"
-	"go-actor/core"
-	"go-actor/remote"
-	"go-actor/remote/attributes"
+	"github.com/geniuscirno/go-actor/core"
+	"github.com/geniuscirno/go-actor/remote"
+	"github.com/geniuscirno/go-actor/remote/attributes"
 	"sync"
 )
 

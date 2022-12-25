@@ -1,13 +1,7 @@
 syntax = "proto3";
 
 package chat;
-option go_package = "chat/chat";
-
-message Connect {}
-
-message Connected {
-  string message = 1;
-}
+option go_package = "github.com/geniuscirno/examples/actor-chat/chat";
 
 message SayRequest{
   string username = 1;

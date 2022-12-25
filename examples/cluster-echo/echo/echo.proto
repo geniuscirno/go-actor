@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package echo;
+option go_package = "github.com/geniuscirno/examples/cluster-echo/echo";
+
+message Echo {
+  string message = 1;
+}
