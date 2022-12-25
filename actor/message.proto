@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package actor;
+option go_package = "go-actor/actor";
+
+message Started {}
+
+message Stopping {}
+
+message Stopped {}
+
+message Stop {}
