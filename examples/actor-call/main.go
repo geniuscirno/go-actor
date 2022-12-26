@@ -13,8 +13,9 @@ type hello struct {
 func Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *hello:
+		context.Send(context.From(), "Hello1 "+msg.Who)
+
 		time.Sleep(time.Second * 3)
-		context.Reply("Hello " + msg.Who)
 	}
 }
 
@@ -31,5 +32,5 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(result)
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 3600)
 }

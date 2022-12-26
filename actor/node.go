@@ -1,7 +1,6 @@
 package actor
 
 import (
-	"github.com/geniuscirno/go-actor/actor/future"
 	"github.com/geniuscirno/go-actor/core"
 )
 
@@ -22,8 +21,8 @@ func (n *Node) SpawnActor(actor Actor, opt ...SpawnOption) (Process, error) {
 	}
 
 	p, err := n.Spawn(&actorBehavior{
-		futures: make(map[int64]*future.Future),
-		actor:   actor,
+		//futures: make(map[int64]*future.Future),
+		actor: actor,
 	}, opts)
 	if err != nil {
 		return nil, err
