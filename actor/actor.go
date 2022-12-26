@@ -2,9 +2,7 @@ package actor
 
 import (
 	"fmt"
-	"github.com/geniuscirno/go-actor/actor/future"
 	"github.com/geniuscirno/go-actor/core"
-	"sync"
 )
 
 type PID = core.PID
@@ -21,9 +19,9 @@ func (f ActorFunc) Receive(c Context) {
 }
 
 type actorBehavior struct {
-	mu        sync.RWMutex
-	futures   map[int64]*future.Future
-	requestId int64
+	//mu        sync.RWMutex
+	//futures   map[int64]*future.Future
+	//requestId int64
 
 	actor Actor
 }
@@ -48,10 +46,10 @@ func (b *actorBehavior) ProcessLoop(process core.Process) error {
 			b.handleStop(actorProcess)
 			return nil
 		case message := <-channels.Mailbox:
-			if message.TestFlag(core.MessageFlagResponse) {
-				b.handleReply(message)
-				continue
-			}
+			//if message.TestFlag(core.MessageFlagResponse) {
+			//	b.handleReply(message)
+			//	continue
+			//}
 
 			b.actor.Receive(newActorContext(actorProcess, message))
 		}
@@ -71,23 +69,23 @@ func (b *actorBehavior) handleTerminate(process *actorProcess) {
 	b.actor.Receive(newActorContext(process, stoppedMessage))
 }
 
-func (b *actorBehavior) handleReply(message core.Message) {
-	if message.RequestID == 0 {
-		return
-	}
-
-	b.mu.Lock()
-	f, ok := b.futures[message.RequestID]
-	if !ok {
-		b.mu.Unlock()
-		return
-	}
-	delete(b.futures, message.RequestID)
-	b.mu.Unlock()
-
-	if err, ok := message.Data.(error); ok {
-		f.SetErr(err)
-		return
-	}
-	f.SetResult(message.Data)
-}
+//func (b *actorBehavior) handleReply(message core.Message) {
+//	if message.RequestID == 0 {
+//		return
+//	}
+//
+//	b.mu.Lock()
+//	f, ok := b.futures[message.RequestID]
+//	if !ok {
+//		b.mu.Unlock()
+//		return
+//	}
+//	delete(b.futures, message.RequestID)
+//	b.mu.Unlock()
+//
+//	if err, ok := message.Data.(error); ok {
+//		f.SetErr(err)
+//		return
+//	}
+//	f.SetResult(message.Data)
+//}

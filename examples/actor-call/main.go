@@ -13,8 +13,16 @@ type hello struct {
 func Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *hello:
+		//time.Sleep(time.Second * 3)
+		//context.Reply("Hello " + msg.Who)
+		context.Send(context.From(), "Hello1 "+msg.Who)
+
 		time.Sleep(time.Second * 3)
-		context.Reply("Hello " + msg.Who)
+		result, err := context.Call(context.Self(), &hello{Who: "inner caller"}).Result()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("inner call result", result)
 	}
 }
 
