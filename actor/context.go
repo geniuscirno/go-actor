@@ -8,6 +8,7 @@ type Context interface {
 	Process
 	Message() interface{}
 	Reply(message interface{}) error
+	Error(err error)
 	From() PID
 }
 
@@ -37,6 +38,10 @@ func (c *actorContext) Reply(message interface{}) error {
 		})
 	}
 	return nil
+}
+
+func (c *actorContext) Error(err error) {
+	c.Reply(err)
 }
 
 func (c *actorContext) From() PID {

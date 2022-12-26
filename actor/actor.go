@@ -1,7 +1,6 @@
 package actor
 
 import (
-	"fmt"
 	"github.com/geniuscirno/go-actor/core"
 )
 
@@ -30,14 +29,14 @@ type actorBehavior struct {
 
 func (b *actorBehavior) ProcessLoop(process core.Process) error {
 	actorProcess := &actorProcess{Process: process}
-
-	b.handleStarted(actorProcess)
 	defer func() {
-		if e := recover(); e != nil {
-			fmt.Println(e)
-		}
+		//if e := recover(); e != nil {
+		//	fmt.Println(e)
+		//}
 		b.handleTerminate(actorProcess)
 	}()
+
+	b.handleStarted(actorProcess)
 
 	channels := process.ProcessChannels()
 	for {
