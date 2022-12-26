@@ -24,7 +24,7 @@ func (p *actorProcess) SpawnActor(actor Actor, opt ...SpawnOption) (Process, err
 	}
 	process, err := p.Process.Spawn(&actorBehavior{
 		//futures: make(map[int64]*future.Future),
-		//actor:   actor,
+		actor: actor,
 	}, opts)
 	if err != nil {
 		return nil, err
