@@ -2,8 +2,9 @@ package actor
 
 import (
 	"context"
-	"github.com/geniuscirno/go-actor/core"
 	"time"
+
+	"github.com/geniuscirno/go-actor/core"
 )
 
 type Process interface {

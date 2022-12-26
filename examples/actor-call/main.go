@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/geniuscirno/go-actor/actor"
 	"time"
+
+	"github.com/geniuscirno/go-actor/actor"
 )
 
 type hello struct {
