@@ -7,6 +7,8 @@ import (
 
 type PID = core.PID
 
+var ZeroPID PID
+
 type Actor interface {
 	Receive(c Context)
 }
