@@ -88,15 +88,15 @@ func (p *process) Stop() error {
 	default:
 	}
 
-	timer := time.NewTimer(time.Second * 30)
-	defer timer.Stop()
-	select {
-	case <-p.ctx.Done():
-		return nil
-	case <-timer.C:
-		p.cancel()
-		return ErrProcessBusy
-	}
+	go func() {
+		timer := time.NewTimer(time.Second * 30)
+		defer timer.Stop()
+		select {
+		case <-p.ctx.Done():
+		case <-timer.C:
+			p.cancel()
+		}
+	}()
 	return nil
 }
 

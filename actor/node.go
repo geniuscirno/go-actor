@@ -6,12 +6,19 @@ import (
 
 type Node struct {
 	core.Node
+	Root Process
 }
 
 func NewNode(name string) *Node {
-	return &Node{
+	n := &Node{
 		Node: core.NewNode(name),
 	}
+	root, err := n.SpawnActor(ActorFunc(func(c Context) {}), Name("root"))
+	if err != nil {
+		panic(err)
+	}
+	n.Root = root
+	return n
 }
 
 func (n *Node) SpawnActor(actor Actor, opt ...SpawnOption) (Process, error) {
@@ -21,7 +28,6 @@ func (n *Node) SpawnActor(actor Actor, opt ...SpawnOption) (Process, error) {
 	}
 
 	p, err := n.Spawn(&actorBehavior{
-		//futures: make(map[int64]*future.Future),
 		actor: actor,
 	}, opts)
 	if err != nil {
