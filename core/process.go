@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"golang.org/x/sync/errgroup"
 	"sync"
 	"time"
 )
@@ -143,13 +142,9 @@ func (p *process) Children() []Process {
 }
 
 func (p *process) StopChildren() error {
-	g := &errgroup.Group{}
 	for _, child := range p.Children() {
-		child := child
-		g.Go(func() error {
-			return child.Stop()
-		})
+		child.Stop()
+		child.Wait()
 	}
-
-	return g.Wait()
+	return nil
 }
