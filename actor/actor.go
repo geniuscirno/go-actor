@@ -15,7 +15,7 @@ func PIDFromString(s string) (PID, error) {
 	if len(sp) != 2 {
 		return PID{}, fmt.Errorf("invalid pid string: %s", s)
 	}
-	return PID{Node: sp[0], ID: sp[1]}, nil
+	return PID{Node: sp[1], ID: sp[0]}, nil
 }
 
 type Actor interface {
