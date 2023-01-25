@@ -268,7 +268,9 @@ func (c *Cluster) SendMessage(ctx context.Context, to core.PID, message core.Mes
 	if to.Node == "" {
 		pid, ok := c.globalPids[to.ID]
 		if ok {
+			c.mu.RUnlock()
 			to.Node = pid.Node
+			return c.node.SendMessage(ctx, to, message)
 		}
 	}
 	ep, ok := c.getEndpoint(to.Node)
