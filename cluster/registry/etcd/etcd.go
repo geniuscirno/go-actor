@@ -46,7 +46,7 @@ type Registry struct {
 	leaseID clientv3.LeaseID
 }
 
-func New(client *clientv3.Client, opt ...Option) registry.Registrar {
+func New(client *clientv3.Client, opt ...Option) *Registry {
 	opts := defaultOptions()
 	for _, o := range opt {
 		o(&opts)
@@ -105,4 +105,8 @@ func (r *Registry) KeepAlive(ctx context.Context) error {
 			return nil
 		}
 	}
+}
+
+func (r *Registry) Watch(ctx context.Context) (registry.Watcher, error) {
+	return newWatcher(ctx, r.opts.namespace, r.client)
 }

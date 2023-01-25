@@ -12,7 +12,7 @@ import (
 )
 
 type Endpoint struct {
-	NodeName   string
+	Name       string
 	Addr       string
 	Attributes *attributes.Attributes
 	conn       *grpc.ClientConn
@@ -24,14 +24,18 @@ func NewEndpoint(nodeName string, addr string) (*Endpoint, error) {
 		return nil, err
 	}
 	return &Endpoint{
-		NodeName: nodeName,
-		Addr:     addr,
-		conn:     conn,
+		Name: nodeName,
+		Addr: addr,
+		conn: conn,
 	}, nil
 }
 
+func (ep *Endpoint) Close() error {
+	return ep.conn.Close()
+}
+
 func (ep *Endpoint) SendMessage(ctx context.Context, to core.PID, message core.Message) error {
-	if to.Node != ep.NodeName {
+	if to.Node != ep.Name {
 		return errors.New("node unmatch")
 	}
 

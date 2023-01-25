@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/geniuscirno/go-actor/cluster/registry"
+	"github.com/geniuscirno/go-actor/cluster/resolver"
 	"github.com/geniuscirno/go-actor/core"
 	"github.com/geniuscirno/go-actor/remote"
 	"github.com/geniuscirno/go-actor/remote/attributes"
@@ -14,6 +15,7 @@ import (
 
 type Options struct {
 	registrar registry.Registrar
+	discovery registry.Discovery
 	address   string
 }
 
@@ -22,6 +24,12 @@ type Option func(opts *Options)
 func Registrar(registrar registry.Registrar) Option {
 	return func(opts *Options) {
 		opts.registrar = registrar
+	}
+}
+
+func Discovery(discovery registry.Discovery) Option {
+	return func(opts *Options) {
+		opts.discovery = discovery
 	}
 }
 
@@ -72,7 +80,8 @@ type Cluster struct {
 	opts Options
 	node core.Node
 
-	server *remote.Server
+	server   *remote.Server
+	resolver resolver.Resolver
 
 	mu        sync.RWMutex
 	endpoints map[string]*remote.Endpoint
@@ -109,6 +118,14 @@ func NewCluster(node core.Node, opt ...Option) *Cluster {
 		go cluster.opts.registrar.KeepAlive(context.TODO())
 	}
 
+	if cluster.opts.discovery != nil {
+		r, err := resolver.New(cluster.opts.discovery, cluster)
+		if err != nil {
+			panic(err)
+		}
+		cluster.resolver = r
+	}
+
 	return cluster
 }
 
@@ -118,14 +135,20 @@ func (c *Cluster) Stop() {
 	if c.opts.registrar != nil {
 		c.opts.registrar.Deregister(ctx, &registry.Node{Name: c.node.Name(), Address: c.opts.address})
 	}
+	if c.resolver != nil {
+		c.resolver.Close()
+	}
 	c.server.Stop()
 }
 
 func (c *Cluster) SendMessage(ctx context.Context, to core.PID, message core.Message) error {
+	c.mu.RLock()
 	ep, ok := c.getEndpoint(to.Node)
 	if !ok {
+		c.mu.RUnlock()
 		return errors.New("no node")
 	}
+	c.mu.RUnlock()
 
 	return ep.SendMessage(ctx, to, message)
 }
@@ -136,20 +159,71 @@ func (c *Cluster) StaticRoute(nodeName string, nodeAddr string, attrs *attribute
 		return err
 	}
 
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.updateEndpoint(ep)
 	return nil
 }
 
 func (c *Cluster) updateEndpoint(ep *remote.Endpoint) {
+	c.endpoints[ep.Name] = ep
+}
+
+func (c *Cluster) UpdateState(state resolver.State) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.endpoints[ep.NodeName] = ep
+	addrsSet := make(map[string]struct{})
+	for _, a := range state.Addresses {
+		if a.Name == c.node.Name() {
+			continue
+		}
+
+		addrsSet[a.Name] = struct{}{}
+		ep, ok := c.getEndpoint(a.Name)
+		if !ok {
+			// 新节点地址 (在endpoints里不存在)
+			ep, err := remote.NewEndpoint(a.Name, a.Addr)
+			if err != nil {
+				continue
+			}
+			c.updateEndpoint(ep)
+			continue
+		}
+
+		// 节点已经存在，但是地址已经改变了
+		if ep.Addr != a.Addr {
+			ep.Close()
+			ep, err := remote.NewEndpoint(a.Name, a.Addr)
+			if err != nil {
+				continue
+			}
+			c.updateEndpoint(ep)
+		}
+	}
+
+	for name, ep := range c.endpoints {
+		if _, ok := addrsSet[name]; !ok {
+			ep.Close()
+			delete(c.endpoints, name)
+		}
+	}
+	return nil
+}
+
+func (c *Cluster) getEndpointByAddr(addr string) (*remote.Endpoint, bool) {
+	for _, v := range c.endpoints {
+		if v.Addr == addr {
+			return v, true
+		}
+	}
+	return nil, false
 }
 
 func (c *Cluster) getEndpoint(nodeName string) (*remote.Endpoint, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	//c.mu.RLock()
+	//defer c.mu.RUnlock()
 
 	ep, ok := c.endpoints[nodeName]
 	if !ok {
