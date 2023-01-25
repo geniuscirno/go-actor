@@ -1,12 +1,22 @@
 package actor
 
 import (
+	"fmt"
 	"github.com/geniuscirno/go-actor/core"
+	"strings"
 )
 
 type PID = core.PID
 
 var ZeroPID PID
+
+func PIDFromString(s string) (PID, error) {
+	sp := strings.Split(s, "@")
+	if len(sp) != 2 {
+		return PID{}, fmt.Errorf("invalid pid string: %s", s)
+	}
+	return PID{Node: sp[0], ID: sp[1]}, nil
+}
 
 type Actor interface {
 	Receive(c Context)

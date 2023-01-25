@@ -8,7 +8,8 @@ type Context interface {
 	Process
 	Message() interface{}
 	Reply(message interface{}) error
-	Error(err error)
+	Error(err error) error
+	HandleCall(reply interface{}, err error) error
 	From() PID
 }
 
@@ -40,8 +41,8 @@ func (c *actorContext) Reply(message interface{}) error {
 	return nil
 }
 
-func (c *actorContext) Error(err error) {
-	c.Reply(err)
+func (c *actorContext) Error(err error) error {
+	return c.Reply(err)
 }
 
 func (c *actorContext) From() PID {
@@ -49,4 +50,11 @@ func (c *actorContext) From() PID {
 		return m.From
 	}
 	return PID{}
+}
+
+func (c *actorContext) HandleCall(reply interface{}, err error) error {
+	if err != nil {
+		return c.Error(err)
+	}
+	return c.Send(c.From(), core.Message{From: c.Self(), Data: reply})
 }
