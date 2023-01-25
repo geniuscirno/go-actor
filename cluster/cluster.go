@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/geniuscirno/go-actor/cluster/registry"
 	"github.com/geniuscirno/go-actor/core"
 	"github.com/geniuscirno/go-actor/remote"
@@ -15,6 +16,7 @@ import (
 type Options struct {
 	registrar registry.Registrar
 	address   string
+	port      int
 }
 
 type Option func(opts *Options)
@@ -84,15 +86,15 @@ func NewCluster(node core.Node, opt ...Option) *Cluster {
 		o(&opts)
 	}
 	cluster := &Cluster{node: node, opts: opts}
-	if opts.address == "" {
+	if cluster.opts.address == "" {
 		address, err := localIPV4Addr()
 		if err != nil {
 			panic(err)
 		}
-		opts.address = address
+		cluster.opts.address = address
 	}
 
-	cluster.server = remote.NewServer(node, cluster.opts.address)
+	cluster.server = remote.NewServer(node, fmt.Sprintf("%s:%d", cluster.opts.address, cluster.opts.port))
 	cluster.endpoints = make(map[string]*remote.Endpoint)
 
 	if err := cluster.server.Start(); err != nil {
@@ -103,7 +105,7 @@ func NewCluster(node core.Node, opt ...Option) *Cluster {
 	if cluster.opts.registrar != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 		defer cancel()
-		if err := cluster.opts.registrar.Register(ctx, &registry.Node{Name: node.Name(), Address: cluster.opts.address}); err != nil {
+		if err := cluster.opts.registrar.Register(ctx, &registry.Node{Name: node.Name(), Address: cluster.server.Address()}); err != nil {
 			panic(err)
 		}
 		go cluster.opts.registrar.KeepAlive(context.TODO())
@@ -116,7 +118,7 @@ func (c *Cluster) Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	if c.opts.registrar != nil {
-		c.opts.registrar.Deregister(ctx, &registry.Node{Name: c.node.Name(), Address: c.opts.address})
+		c.opts.registrar.Deregister(ctx, &registry.Node{Name: c.node.Name(), Address: c.server.Address()})
 	}
 	c.server.Stop()
 }
@@ -145,6 +147,18 @@ func (c *Cluster) updateEndpoint(ep *remote.Endpoint) {
 	defer c.mu.Unlock()
 
 	c.endpoints[ep.NodeName] = ep
+}
+
+func (c *Cluster) UpdateEndpoints(endpoints []*remote.Endpoint) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for k := range c.endpoints {
+		delete(c.endpoints, k)
+	}
+	for _, ep := range endpoints {
+		c.endpoints[ep.NodeName] = ep
+	}
 }
 
 func (c *Cluster) getEndpoint(nodeName string) (*remote.Endpoint, bool) {

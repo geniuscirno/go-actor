@@ -19,7 +19,7 @@ type options struct {
 
 func defaultOptions() options {
 	return options{
-		namespace: "/",
+		namespace: "node",
 		ttl:       time.Second * 60,
 	}
 }
