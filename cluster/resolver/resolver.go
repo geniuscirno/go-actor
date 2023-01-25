@@ -2,10 +2,8 @@ package resolver
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/geniuscirno/go-actor/cluster/registry"
-	"time"
+	"log"
 )
 
 type Address struct {
@@ -37,9 +35,7 @@ func New(d registry.Discovery, c Cluster) (Resolver, error) {
 	r := &resolver{d: d, c: c}
 	r.ctx, r.cancel = context.WithCancel(context.Background())
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-	defer cancel()
-	w, err := r.d.Watch(ctx)
+	w, err := r.d.Watch(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -53,10 +49,9 @@ func (r *resolver) watch() {
 	for {
 		nodes, err := r.w.Next()
 		if err != nil {
+			log.Println("resolver: watch Next failed:", err)
 			return
 		}
-		b, _ := json.Marshal(nodes)
-		fmt.Println("resolver: watch", string(b))
 
 		addrs := make([]Address, 0, len(nodes))
 		for _, node := range nodes {

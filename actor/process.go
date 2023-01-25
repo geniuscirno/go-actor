@@ -49,6 +49,8 @@ func (p *actorProcess) CallCtx(ctx context.Context, to PID, message interface{})
 		panic(err)
 	}
 
-	future.Send(to, message)
+	if err := future.Send(to, message); err != nil {
+		future.SetErr(err)
+	}
 	return future
 }

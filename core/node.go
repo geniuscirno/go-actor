@@ -11,6 +11,7 @@ type Node interface {
 	Stop()
 	Wait()
 	Join(c Cluster)
+	Cluster() Cluster
 }
 
 type node struct {
@@ -142,4 +143,8 @@ func (n *node) Wait() {
 
 func (n *node) Join(c Cluster) {
 	n.cluster = c
+}
+
+func (n *node) Cluster() Cluster {
+	return n.cluster
 }

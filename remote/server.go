@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/geniuscirno/go-actor/core"
 	"google.golang.org/grpc"
+	"log"
 	"net"
 	"strings"
 )
@@ -55,6 +56,7 @@ func (s *Server) OnMessage(ctx context.Context, in *OnMessageRequest) (*OnMessag
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("cluster: recv message from %s@%s to %v: %v\n", in.Message.From.Id, in.Message.From.Node, to, data)
 
 	if err := s.node.SendMessage(ctx, to, core.Message{
 		From:      core.PID{Node: in.Message.From.Node, ID: in.Message.From.Id},

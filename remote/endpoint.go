@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/proto"
+	"log"
 )
 
 type Endpoint struct {
@@ -51,6 +52,7 @@ func (ep *Endpoint) SendMessage(ctx context.Context, to core.PID, message core.M
 
 	client := NewRemoteClient(ep.conn)
 
+	log.Printf("cluster: send message from %v to %v: %v\n", message.From, to, data)
 	_, err = client.OnMessage(ctx, &OnMessageRequest{
 		To: &PID{Node: to.Node, Id: to.ID},
 		Message: &Message{
