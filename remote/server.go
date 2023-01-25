@@ -7,6 +7,7 @@ import (
 	"github.com/geniuscirno/go-actor/core"
 	"google.golang.org/grpc"
 	"net"
+	"strings"
 )
 
 type Server struct {
@@ -26,11 +27,17 @@ func (s *Server) Start() error {
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
+	sp := strings.SplitN(s.addr, ":", 2)
+	s.addr = fmt.Sprintf("%s:%d", sp[0], lis.Addr().(*net.TCPAddr).Port)
 
 	s.s = grpc.NewServer()
 	RegisterRemoteServer(s.s, s)
 	go s.s.Serve(lis)
 	return nil
+}
+
+func (s *Server) Address() string {
+	return s.addr
 }
 
 func (s *Server) Stop() {
