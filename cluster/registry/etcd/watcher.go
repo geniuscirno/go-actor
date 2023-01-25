@@ -40,7 +40,7 @@ func newWatcher(ctx context.Context, key string, client *clientv3.Client) (*watc
 		if err := json.Unmarshal(kv.Value, n); err != nil {
 			continue
 		}
-		w.nodes[n.Name] = n
+		w.nodes[string(kv.Key)] = n
 	}
 
 	w.watchChan = w.watcher.Watch(w.ctx, key, clientv3.WithPrefix(), clientv3.WithRev(resp.Header.Revision+1))
