@@ -20,10 +20,6 @@ func (f ActorFunc) Receive(c Context) {
 }
 
 type actorBehavior struct {
-	//mu        sync.RWMutex
-	//futures   map[int64]*future.Future
-	//requestId int64
-
 	actor Actor
 }
 
@@ -47,11 +43,6 @@ func (b *actorBehavior) ProcessLoop(process core.Process) error {
 			b.handleStop(actorProcess)
 			return nil
 		case message := <-channels.Mailbox:
-			//if message.TestFlag(core.MessageFlagResponse) {
-			//	b.handleReply(message)
-			//	continue
-			//}
-
 			b.actor.Receive(newActorContext(actorProcess, message))
 		}
 	}
