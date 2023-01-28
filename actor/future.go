@@ -1,6 +1,7 @@
 package actor
 
 import (
+	"errors"
 	"github.com/geniuscirno/go-actor/core"
 	"sync"
 	"time"
@@ -8,14 +9,15 @@ import (
 
 type Future struct {
 	core.Process
-	cond   *sync.Cond
-	done   bool
-	result interface{}
-	err    error
+	timeout time.Duration
+	cond    *sync.Cond
+	done    bool
+	result  interface{}
+	err     error
 }
 
 func NewFuture(process Process, timeout time.Duration) (*Future, error) {
-	future := &Future{cond: sync.NewCond(&sync.Mutex{})}
+	future := &Future{cond: sync.NewCond(&sync.Mutex{}), timeout: timeout}
 
 	fp := &futureProcess{
 		Future: future,
@@ -26,19 +28,6 @@ func NewFuture(process Process, timeout time.Duration) (*Future, error) {
 		return nil, err
 	}
 	fp.Future.Process = p
-
-	if timeout > 0 {
-		go func() {
-			timer := time.NewTimer(timeout)
-			defer timer.Stop()
-
-			select {
-			case <-timer.C:
-				future.SetErr(core.ErrTimeout)
-			}
-		}()
-	}
-
 	return future, nil
 }
 
@@ -87,9 +76,13 @@ type futureProcess struct {
 }
 
 func (fp *futureProcess) ProcessLoop(process core.Process) error {
+	//log.Println("future processLoop", process.Self().String())
 	channels := process.ProcessChannels()
+	timer := time.NewTimer(fp.timeout)
+	defer timer.Stop()
 	select {
 	case msg := <-channels.Mailbox:
+		//log.Println("future receive: ", reflect.TypeOf(msg.Data), msg.Data, process.Self().String())
 		if err, ok := msg.Data.(error); ok {
 			fp.SetErr(err)
 		} else {
@@ -99,6 +92,8 @@ func (fp *futureProcess) ProcessLoop(process core.Process) error {
 		return nil
 	case <-process.Context().Done():
 		return process.Context().Err()
+	case <-timer.C:
+		return errors.New("timeout")
 	}
 	return nil
 }
