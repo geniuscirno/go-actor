@@ -17,6 +17,9 @@ type Future struct {
 }
 
 func NewFuture(process Process, timeout time.Duration) (*Future, error) {
+	if timeout == 0 {
+		timeout = time.Second * 30
+	}
 	future := &Future{cond: sync.NewCond(&sync.Mutex{}), timeout: timeout}
 
 	fp := &futureProcess{
@@ -76,24 +79,22 @@ type futureProcess struct {
 }
 
 func (fp *futureProcess) ProcessLoop(process core.Process) error {
-	//log.Println("future processLoop", process.Self().String())
 	channels := process.ProcessChannels()
 	timer := time.NewTimer(fp.timeout)
 	defer timer.Stop()
 	select {
 	case msg := <-channels.Mailbox:
-		//log.Println("future receive: ", reflect.TypeOf(msg.Data), msg.Data, process.Self().String())
 		if err, ok := msg.Data.(error); ok {
 			fp.SetErr(err)
 		} else {
 			fp.SetResult(msg.Data)
 		}
 	case <-channels.Exit:
-		return nil
+		fp.SetErr(errors.New("killed"))
 	case <-process.Context().Done():
-		return process.Context().Err()
+		fp.SetErr(process.Context().Err())
 	case <-timer.C:
-		return errors.New("timeout")
+		fp.SetErr(errors.New("timeout"))
 	}
 	return nil
 }
